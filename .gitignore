@@ -1,0 +1,15 @@
+*.auto/
+*.autom4te.cache/
+tools/mpeg2dec/vc++/
+results/
+tmp/
+
+*libvo/
+*m4/
+videos/
+
+*.deps
+*.libs
+*libtool/
+
+*.o
