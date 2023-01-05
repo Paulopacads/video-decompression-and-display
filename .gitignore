@@ -12,4 +12,11 @@ videos/
 *.libs
 *libtool/
 
+*.pgm
+*.ppm
+*.m2v
+*.lo
+*.la
+*.pc
+*.in
 *.o

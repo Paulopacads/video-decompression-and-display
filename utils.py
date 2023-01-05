@@ -20,9 +20,9 @@ def yuv_to_bgr(yuv_image) :
             y = yuv_image[i, j, 0]
             u = yuv_image[480 + math.floor(i / 2) , math.floor(j / 2), 0]
             v = yuv_image[480 + math.floor(i / 2) , 360 + math.floor(j / 2), 0]
-            #print(y, u, v)
+            print(y, u, v)
             rgb = convert_pixel(y, u, v)
-            #print("Rgb :", rgb)
+            print("Rgb :", rgb)
             new_image[i, j] = rgb
     return new_image
 

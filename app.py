@@ -5,6 +5,15 @@ import cv2
 
 
 def main() : 
+    path = "pgm/9.pgm"
+    pgm_image = cv2.imread(path)
+    ppm_image = yuv_to_bgr(pgm_image)
+    #new_path = "results/" + path.split('/')[-1].split('.')[0] + ".ppm"
+    #cv2.imwrite(new_path, ppm_image)
+    print( "ppm done: " + path)
+
+
+def old() :
     print(sys.argv)
     if "help" in sys.argv :
         print("Options : ")
@@ -24,10 +33,20 @@ def main() :
             print( "ppm done: " + path)
     # play the files as a video
     else : 
-        for path in path_all_pgm : 
-            pgm_image = cv2.imread(path)
-            ppm_image = yuv_to_bgr(pgm_image)
+        for path in path_all_pgm :
+            ppm_image = cv2.imread(path)
             ppm_image = ppm_image.astype(np.uint8)
             cv2.imshow('display', ppm_image)
-        cv2.destroyAllWindows()
+            print("Show next image")
+    
+    #for root, dirs, files in os.walk("results"):
+    #    for file in files:
+    #        if file.endswith(".ppm") :
+    #            full_path = os.path.join(root, file)
+    #            ppm_image = cv2.imread(full_path)
+    #            #ppm_image = ppm_image.astype(np.uint8)
+    #            cv2.imshow('display', ppm_image)
+    #            print("Show next image")
+    cv2.destroyAllWindows()
+
 main()
