@@ -1,4 +1,3 @@
-*.auto/
 *.autom4te.cache/
 tools/mpeg2dec/vc++/
 results/
