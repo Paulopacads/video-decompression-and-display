@@ -1,12 +1,14 @@
 
 CC = g++
 
-CPP_FILES = decode.cc #mpeg_reader.cc #bob.cc tools/mpeg2dec/libmpeg2/decode.c
-HXX_FILES = tools/mpeg2dec/include/mpeg2.h decode.hh #mpeg_reader.hh #bob.hh
+CPP_FILES = decode.cc display.cc #mpeg_reader.cc #bob.cc tools/mpeg2dec/libmpeg2/decode.c
+HXX_FILES = tools/mpeg2dec/include/mpeg2.h decode.hh display.hh #mpeg_reader.hh #bob.hh
 OBJ_FILES = $(CPP_FILES:.cpp=.o)
 
 CXX_FLAGS += -Wall -Wextra -O3 -g
 LDXX_FLAGS = 
+CFLAGS = $(shell pkg-config --cflags opencv)
+LIBS = $(shell pkg-config --libs opencv)
 MAIN_FILE = main.cc
 DIST = main
 
@@ -51,7 +53,7 @@ post-build:
 main-build: pre-build build
 
 build: $(OBJ_FILES)
-	$(CC) $(MAIN_FILE) -o $(DIST) $(OBJ_FILES) $(CXX_FLAGS) $(LDXX_FLAGS)
+	$(CC) $(MAIN_FILE) $(CFLAGS) -o $(DIST) $(OBJ_FILES) $(CXX_FLAGS) $(LDXX_FLAGS) $(LIBS)
 
 
 %.o: %.cpp %.hh
