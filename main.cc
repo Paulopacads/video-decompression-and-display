@@ -4,12 +4,14 @@
 #include <iostream>
 #include <unistd.h>
 #include "decode.hh"
+#include "display.hh"
 //#include "mpeg_reader.hh"
 //#include "bob.hh"
 
 int main(int argc, char **argv)
 {
-    convert_all_images("pgm", "ppm");
+    //convert_all_images("pgm", "ppm");
+    display_all_pgm("pgm", 60);
 
     int opt;
 

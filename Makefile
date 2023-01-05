@@ -7,8 +7,8 @@ OBJ_FILES = $(CPP_FILES:.cpp=.o)
 
 CXX_FLAGS += -Wall -Wextra -O3 -g
 LDXX_FLAGS = 
-CFLAGS = $(shell pkg-config --cflags opencv)
-LIBS = $(shell pkg-config --libs opencv)
+CFLAGS = $(shell pkg-config --cflags opencv4)
+LIBS = $(shell pkg-config --libs opencv4)
 MAIN_FILE = main.cc
 DIST = main
 
