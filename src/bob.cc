@@ -1,47 +1,44 @@
 #include "bob.hh"
 
 #include <cstring>
+#include <iostream>
 
-bob_context_t *bob_init(int width, int height) {
-  bob_context_t *ctx = new bob_context_t;
-  ctx->decoder = mpeg2_init();
-  ctx->stride = width * 3;
-  ctx->buffer = new uint8_t[height * ctx->stride];
-  return ctx;
+PPM_Image **bob_deinterlace(PPM_Image *in, bool top_first) {
+    PPM_Image **out = (PPM_Image **) malloc(2 * sizeof(PPM_Image *));
+
+    out[0] = new PPM_Image(in->width, in->height, in->max_val);
+    out[1] = new PPM_Image(in->width, in->height, in->max_val);
+
+    bob_deinterlace(in->data, out[0]->data, in->width, in->height, top_first);
+    bob_deinterlace(in->data, out[1]->data, in->width, in->height, !top_first);
+
+    return out;
 }
 
-void bob_destroy(bob_context_t *ctx) {
-  mpeg2_close(ctx->decoder);
-  delete[] ctx->buffer;
-  delete ctx;
-}
-
-void bob_decode(bob_context_t *ctx, uint8_t *data, int size) {
-  mpeg2_buffer(ctx->decoder, data, data + size);
-  mpeg2_state_t state = mpeg2_parse(ctx->decoder);
-//   if (state != STATE_SEQUENCE)
-//     return;
-  ctx->info = mpeg2_info(ctx->decoder);
-}
-
-void bob_deinterlace(bob_context_t *ctx, uint8_t *out) {
-    uint8_t *y, *u, *v;
-    y = ctx->info->display_fbuf->buf[0];
-    u = ctx->info->display_fbuf->buf[1];
-    v = ctx->info->display_fbuf->buf[2];
-
-    int width = ctx->info->sequence->width;
-    int height = ctx->info->sequence->height;
+void bob_deinterlace(int *in, int *out, int width, int height, bool isTop) {
     int i, j;
-    for (j = 0; j < height; j += 2) {
-        for (i = 0; i < width; i++) {
-            ctx->buffer[j * ctx->stride + i * 3] = y[j * width + i];
-            ctx->buffer[j * ctx->stride + i * 3 + 1] = u[(j / 2) * width + i];
-            ctx->buffer[j * ctx->stride + i * 3 + 2] = v[(j / 2) * width + i];
-            ctx->buffer[(j + 1) * ctx->stride + i * 3] = y[(j + 1) * width + i];
-            ctx->buffer[(j + 1) * ctx->stride + i * 3 + 1] = u[(j / 2) * width + i];
-            ctx->buffer[(j + 1) * ctx->stride + i * 3 + 2] = v[(j / 2) * width + i];
+    int offset = isTop ? 0 : 1;
+    int pixel_width = 3;
+
+    if (in == NULL || out == NULL) {
+        std::cout << "Error: NULL pointer" << std::endl;
+        return;
+    }
+
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width * pixel_width; j++) {
+            if (i % 2 == offset)
+                out[i * width * pixel_width + j] = in[i * width * pixel_width + j];
+            else {
+                if (i > 0) {
+                    if (i < height - 1)
+                        out[i * width * pixel_width + j] = (in[(i - 1) * width * pixel_width + j] + in[(i + 1) * width * pixel_width + j]) / 2;
+                    else
+                        out[i * width * pixel_width + j] = in[(i - 1) * width * pixel_width + j];
+                }
+                else
+                    out[i * width * pixel_width + j] = in[(i + 1) * width * pixel_width + j];
+            }
         }
     }
-    memcpy(out, ctx->buffer, height * ctx->stride);
 }

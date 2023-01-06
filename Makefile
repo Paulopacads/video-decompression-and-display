@@ -1,11 +1,11 @@
 
 CC = g++
 
-CPP_FILES = src/decode.cc src/display.cc #mpeg_reader.cc #bob.cc tools/mpeg2dec/libmpeg2/decode.c
-HXX_FILES = src/decode.hh src/display.hh #mpeg_reader.hh #bob.hh
-OBJ_FILES = $(CPP_FILES:.cpp=.o)
+CPP_FILES = src/decode.cc src/bob.cc src/display.cc #mpeg_reader.cc #bob.cc tools/mpeg2dec/libmpeg2/decode.c
+HXX_FILES = src/decode.hh src/bob.hh src/display.hh #mpeg_reader.hh #bob.hh
+OBJ_FILES = $(CPP_FILES:.cc=.o)
 
-CXX_FLAGS += -Wall -Wextra -O3 -g
+CXX_FLAGS += -Wall -Wextra -O3 -g -std=c++17
 LDXX_FLAGS = 
 CFLAGS = $(shell pkg-config --cflags opencv4)
 LIBS = $(shell pkg-config --libs opencv4)

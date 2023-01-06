@@ -1,18 +1,10 @@
 #pragma once
 
-#include "tools/mpeg2dec/include/mpeg2.h"
+#include "decode.hh"
 
-typedef struct {
-  mpeg2dec_t *decoder;
-  const mpeg2_info_t *info;
-  uint8_t *buffer;
-  int stride;
-} bob_context_t;
+#include <stdbool.h>
+#include <stdint.h>
 
-bob_context_t *bob_init(int, int);
+PPM_Image **bob_deinterlace(PPM_Image *in, bool top_first);
 
-void bob_destroy(bob_context_t*);
-
-void bob_decode(bob_context_t*, uint8_t*, int);
-
-void bob_deinterlace(bob_context_t*, uint8_t*);
+void bob_deinterlace(int *in, int *out, int width, int height, bool isTop);

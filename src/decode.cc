@@ -47,6 +47,14 @@ PPM_Image PGM_Image::convert_to_ppm_rgb()
     return ppm;
 }
 
+PPM_Image::PPM_Image(int width, int height, int max_val)
+{
+    this->width = width;
+    this->height = height;
+    this->max_val = max_val;
+    data = (int *)malloc(sizeof(int) * width * height * 3);
+}
+
 PPM_Image::PPM_Image(PGM_Image *pgm)
 {
     width = pgm->width;
