@@ -7,23 +7,12 @@
 #include "src/display.hh"
 #include <string>
 #include <filesystem>
+#include <fstream>
 // #include "mpeg_reader.hh"
 // #include "bob.hh"
 
-double get_framerate(double framerate, std::string video_filename)
-{
-    // Get original video frame rate
-    if (framerate < 0)
-    {
-        // TODO modify mpeg2dec to display on stdout the framerate
-        // if ()
-        // framerate = 25;
-    }
-
-    return framerate;
-}
-
-void generate_pgm_files(std::string video_filename)
+// Generate all pgm files an return the framerate of the file
+float generate_pgm_files(std::string video_filename)
 {
     // Remove the content of the pgm folder
     std::filesystem::remove_all("pgm");
@@ -31,13 +20,29 @@ void generate_pgm_files(std::string video_filename)
 
     std::string command = "cd pgm ; ./../tools/mpeg2dec/src/mpeg2dec ../";
     command.append(video_filename);
-    command.append(" -o pgm");
+    command.append(" -o pgm > infos.txt");
     int err = system(command.c_str());
     if (err == -1)
     {
         std::cerr << "Error: can't execute mpeg2dec command: " << command.c_str() << std::endl;
         exit(1);
     }
+
+    std::fstream info_file;
+    info_file.open("pgm/infos.txt");
+    if (!info_file.is_open())
+    {
+        fprintf(stderr, "Error: can't open file %s", "pgm/infos.txt");
+        exit(1);
+    }
+
+    std::string line;
+    std::getline(info_file, line); 
+    float frame_period= -1;
+    sscanf(line.c_str(), "Frame Period: %f", &frame_period);
+    info_file.close();
+
+    return frame_period;
 }
 
 int main(int argc, char **argv)
@@ -45,7 +50,7 @@ int main(int argc, char **argv)
     int opt;
 
     std::string video_filename;
-    double framerate = -1;
+    float framerate = -1.0f;
     bool on_screen = true;
 
     // Parse command-line arguments using getopt
@@ -69,13 +74,17 @@ int main(int argc, char **argv)
     }
 
     // *** Generate all pgm files *** //
-    generate_pgm_files(video_filename);
+    float frame_period = generate_pgm_files(video_filename);
 
     if (on_screen)
     {
         // Framerate gestion
-        // framerate = get_framerate(framerate, video_filename);
-        framerate = 25;
+        if (framerate < 0) {
+            if (frame_period < 0)
+                framerate = 25;
+            else 
+                framerate = 1.0f / frame_period;
+        }
 
         display_all_pgm("pgm", framerate);
     }

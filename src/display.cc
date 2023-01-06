@@ -40,6 +40,7 @@ void display_all_pgm(std::string source_directory, int fps)
     const std::filesystem::path source_path{source_directory};
     create_window();
     int milli_wait = 1000 / fps;
+    std::cout << "Frame period " << milli_wait << "ms Framerate " << fps << "ips" << std::endl;
 
     // Sort the file list to display in the right order
     std::set<std::filesystem::path, decltype(name_compare)*> sorted_by_name(name_compare);

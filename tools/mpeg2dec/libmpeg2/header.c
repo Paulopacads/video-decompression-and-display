@@ -241,6 +241,7 @@ static int sequence_ext (mpeg2dec_t * mpeg2dec)
 
     sequence->frame_period =
 	sequence->frame_period * ((buffer[5]&31)+1) / (((buffer[5]>>5)&3)+1);
+	printf("Frame Period: %f", (float)sequence->frame_period / (float)27000000);
 
     mpeg2dec->ext_state = SEQ_DISPLAY_EXT;
 
