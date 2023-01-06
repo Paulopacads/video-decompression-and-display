@@ -9,7 +9,7 @@
 #include <filesystem>
 #include <fstream>
 // #include "mpeg_reader.hh"
-// #include "bob.hh"
+#include "src/bob.hh"
 
 // Generate all pgm files an return the framerate of the file
 float generate_pgm_files(std::string video_filename)
@@ -45,6 +45,52 @@ float generate_pgm_files(std::string video_filename)
     return frame_period;
 }
 
+int main(int argc, char **argv)
+{
+    // convert_all_images("pgm", "ppm");
+
+    PGM_Image pgm("images/pgm/5.pgm");
+    PGM_Image *pgm_p = &pgm;
+    PPM_Image ppm(pgm_p);
+    PPM_Image *ppm_p = &ppm;
+
+    std::cout << "Starting bob deinterlace" << std::endl;
+    PPM_Image **ppm_bob_p = bob_deinterlace(ppm_p, true);
+
+    ppm_p->save_ppm("images/ppm/5_.ppm");
+    ppm_bob_p[0]->save_ppm("images/ppm/5_0.ppm");
+    ppm_bob_p[1]->save_ppm("images/ppm/5_1.ppm");
+    
+    free(ppm_bob_p);
+
+    int opt;
+
+    std::string video_filename;
+    double framerate;
+    bool on_screen = true;
+
+    // Parse command-line arguments using getopt
+    while ((opt = getopt(argc, argv, "video:f:ppm")) != -1)
+    {
+        switch (opt)
+        {
+        case 'video':
+            video_filename = optarg;
+            break;
+        case 'f':
+            framerate = std::stod(optarg);
+            break;
+        case 'ppm':
+            on_screen = false;
+            break;
+        default:
+            std::cerr << "Usage: " << argv[0] << " [-video filename] [-f framerate] [-ppm]" << std::endl;
+            return 1;
+        }
+    }
+}
+
+/*
 int main(int argc, char **argv)
 {
     int opt;
@@ -90,34 +136,6 @@ int main(int argc, char **argv)
     }
     else
         convert_all_images("pgm", "ppm");
-}
-
-/*
-int main() {
-  bob_context_t ctx;
-  int width = 720;
-  int height = 480;
-  bob_init(&ctx, width, height);
-
-  // Lire les données du flux vidéo et les envoyer au décodeur
-  uint8_t *data;
-  int len;
-  while (read_video_data(&data, &len)) {
-    bob_decode(&ctx, data, len);
-  }
-
-  // Allouer de la mémoire pour l'image de sortie
-  uint8_t *output = new uint8_t[width * height * 3];
-
-  // Désentrelacer l'image
-  bob_deinterlace(&ctx, output);
-
-  // Afficher ou enregistrer l'image désentrelacée
-
-  // Nettoyer et libérer la mémoire
-  bob_cleanup(&ctx);
-  delete[] output;
-  return 0;
 }
 */
 

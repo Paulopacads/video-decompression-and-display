@@ -12,6 +12,7 @@ public:
     int max_val;
 
     // Will convert pgm to ppm
+    PPM_Image(int width, int height, int max_val);
     PPM_Image(PGM_Image *pgm);
     ~PPM_Image()
     {
