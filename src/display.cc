@@ -3,63 +3,92 @@
 #include <filesystem>
 #include <unistd.h>
 #include <set>
-#include <opencv2/opencv.hpp>
 #include <vector>
+#include "bob.hh"
+#include "flags.hh"
+#include <opencv2/opencv.hpp>
 
 #define WINDOW_NAME "render"
 using namespace cv;
+using namespace std;
 
-void create_window() 
+void create_window()
 {
-    std::cout << "Init window" << std::endl;
     namedWindow(WINDOW_NAME, WINDOW_NORMAL);
 }
 
-void display_ppm(PPM_Image ppm, int milliseconds_between) 
+void display_ppm(PPM_Image ppm, int milliseconds_between)
 {
-    //std::cout << "Start display ppm" << std::endl;
-    Mat image_tmp(ppm.height, ppm.width, CV_32SC3, ppm.data); 
+    // cout << "Start display ppm" << endl;
+    Mat image_tmp(ppm.height, ppm.width, CV_32SC3, ppm.data);
     Mat image;
     image_tmp.convertTo(image, CV_8UC3);
     cvtColor(image, image, COLOR_RGB2BGR);
-    //std::cout << image << std::endl;
+    // cout << image << endl;
     imshow(WINDOW_NAME, image);
-    cv::waitKey(milliseconds_between);
+    waitKey(milliseconds_between);
 }
 
-bool name_compare(std::filesystem::path a, std::filesystem::path b) 
+bool name_compare(filesystem::path a, filesystem::path b)
 {
-    std::string a_str = a.filename().string();
-    std::string b_str = b.filename().string();
+    string a_str = a.filename().string();
+    string b_str = b.filename().string();
     if (a_str.length() != b_str.length())
         return a_str.length() < b_str.length();
     return a_str < b_str;
 }
 
-void display_all_pgm(std::string source_directory, bool constant_fps, std::vector<uint> &flags, std::vector<float> &frame_periods) 
+void display_all_pgm(string source_directory, vector<uint> &flags, vector<float> &frame_periods)
 {
-    const std::filesystem::path source_path{source_directory};
+    const filesystem::path source_path{source_directory};
     create_window();
 
     // Sort the file list to display in the right order
-    std::set<std::filesystem::path, decltype(name_compare)*> sorted_by_name(name_compare);
-    for (auto &entry : std::filesystem::directory_iterator(source_path))
+    set<filesystem::path, decltype(name_compare) *> sorted_by_name(name_compare);
+    for (auto &entry : filesystem::directory_iterator(source_path))
         sorted_by_name.insert(entry.path());
 
-    int act_period = frame_periods[0];
+    int act_period = frame_periods[0] * 1000;
     int index_period = 0;
     int index_flags = 0;
+    // cout << "Start period " << act_period << " size " << frame_periods.size() << endl;
     for (const auto &entry : sorted_by_name)
     {
-        //std::cout << "Frame period " << milli_wait << "ms Framerate " << fps << "ips" << std::endl;
-        // --- TODO Handle flags change and frmae periods --- //
-        PGM_Image *pgm = new PGM_Image(entry);
-        PPM_Image *converted = new PPM_Image(pgm);
-        delete pgm;
-        display_ppm(*converted, act_period);
-        //delete converted;
+        //cout << "Start flag " << flags[index_flags] << " size " << flags.size() << " i " << index_flags << endl;
+        if (flags[index_flags] == CHANGE_PERIOD && frame_periods.size() > 1)
+        {
+            act_period = frame_periods[index_period++] * 1000;
+            //cout << "Frame period " << act_period << "ms Framerate " << 1000 / act_period << "ips" << endl;
+            index_flags++;
+        }
 
-        //std::cout << entry.filename() << " has been displayed" << std::endl;
+        PGM_Image *pgm = new PGM_Image(entry);
+        PPM_Image *ppm = new PPM_Image(pgm);
+
+        if (flags[index_flags] == FLAG_PROGRESSIVE_FRAME)
+        {
+            display_ppm(*ppm, act_period);
+        }
+        else
+        {
+            PPM_Image **ppm_bob_p = bob_deinterlace(ppm, flags[index_flags] == FLAG_TOP_FIELD_FIRST);
+            display_ppm(*ppm_bob_p[0], act_period);
+            if (flags[index_flags] == FLAG_REPEAT_FIRST_FIELD)
+                display_ppm(*ppm_bob_p[0], act_period);
+            display_ppm(*ppm_bob_p[1], act_period);
+
+            //delete ppm_bob_p[0];
+            //delete ppm_bob_p[1];
+            free(ppm_bob_p);
+        }
+
+        //delete pgm;
+        //delete ppm;
+
+        if (flags.size() > 1) 
+            index_flags++;
+
+        // cout << entry.filename() << " has been displayed" << endl;
     }
     waitKey(0);
     destroyWindow(WINDOW_NAME);

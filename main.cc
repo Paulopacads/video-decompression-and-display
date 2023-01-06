@@ -8,7 +8,9 @@
 #include <filesystem>
 #include <fstream>
 #include <vector>
-#include <src/flags.hh>
+#include "src/flags.hh"
+#include "src/bob.hh"
+#include <getopt.h>
 
 // Generate all pgm files an return the framerate of the file
 void generate_pgm_files(std::string video_filename, std::vector<uint> &flags, std::vector<float> &frame_periods)
@@ -61,60 +63,23 @@ void generate_pgm_files(std::string video_filename, std::vector<uint> &flags, st
 
 int main(int argc, char **argv)
 {
-    // convert_all_images("pgm", "ppm");
-
-    PGM_Image pgm("images/pgm/5.pgm");
-    PGM_Image *pgm_p = &pgm;
-    PPM_Image ppm(pgm_p);
-    PPM_Image *ppm_p = &ppm;
-
-    std::cout << "Starting bob deinterlace" << std::endl;
-    PPM_Image **ppm_bob_p = bob_deinterlace(ppm_p, true);
-
-    ppm_p->save_ppm("images/ppm/5_.ppm");
-    ppm_bob_p[0]->save_ppm("images/ppm/5_0.ppm");
-    ppm_bob_p[1]->save_ppm("images/ppm/5_1.ppm");
-    
-    free(ppm_bob_p);
-
-    int opt;
-
-    std::string video_filename;
-    double framerate;
-    bool on_screen = true;
-
-    // Parse command-line arguments using getopt
-    while ((opt = getopt(argc, argv, "video:f:ppm")) != -1)
-    {
-        switch (opt)
-        {
-        case 'video':
-            video_filename = optarg;
-            break;
-        case 'f':
-            framerate = std::stod(optarg);
-            break;
-        case 'ppm':
-            on_screen = false;
-            break;
-        default:
-            std::cerr << "Usage: " << argv[0] << " [-video filename] [-f framerate] [-ppm]" << std::endl;
-            return 1;
-        }
-    }
-}
-
-/*
-int main(int argc, char **argv)
-{
     int opt;
 
     std::string video_filename;
     float framerate = -1.0f;
     bool on_screen = true;
+    uint force_flag = 10;
+
+    const char *short_options = "v:f:p";
+    const option long_options[] = {
+        { "video",  1, NULL, 'v' },
+        { "framerate", 1, NULL, 'f' },
+        { "ppm",  0, NULL, 'p' },
+        { "flags",    1, NULL, 0 } 
+    };
 
     // Parse command-line arguments using getopt
-    while ((opt = getopt(argc, argv, "v:f:p")) != -1)
+    while ((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1)
     {
         switch (opt)
         {
@@ -126,6 +91,9 @@ int main(int argc, char **argv)
             break;
         case 'p':
             on_screen = false;
+            break;
+        case 0:
+            force_flag = std::stoi(optarg);
             break;
         default:
             std::cerr << "Usage: " << argv[0] << " [-v filename] [-f framerate] [-p]" << std::endl;
@@ -152,23 +120,14 @@ int main(int argc, char **argv)
             frame_periods.push_back(1000.0f / framerate);
         }
 
-        display_all_pgm("pgm", frame_periods.size() == 1, flags, frame_periods);
+        if (force_flag != 10)
+        {
+            flags.clear(); 
+            flags.push_back(force_flag);
+        }
+
+        display_all_pgm("pgm", flags, frame_periods);
     }
     else
         convert_all_images("pgm", "ppm");
 }
-*/
-
-/*void tmp(int argc, char** argv)
-{
-    FILE * mpegfile;
-
-    if (argc > 1) {
-    mpegfile = fopen (argv[1], "rb");
-    if (!mpegfile) {
-        fprintf (stderr, "Could not open file \"%s\".\n", argv[1]);
-        exit (1);
-    }
-    } else
-    mpegfile = stdin;
-}*/

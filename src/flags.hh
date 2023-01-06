@@ -1,0 +1,6 @@
+#pragma once
+
+#define FLAG_TOP_FIELD_FIRST 0
+#define FLAG_REPEAT_FIRST_FIELD 1
+#define FLAG_PROGRESSIVE_FRAME 2
+#define CHANGE_PERIOD 3
