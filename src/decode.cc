@@ -101,6 +101,10 @@ void PPM_Image::save_ppm(std::string file_path)
 
 void convert_all_images(std::string source_directory, std::string target_directory)
 {
+    // Remove the content of the target folder
+    std::filesystem::remove_all(target_directory);
+    std::filesystem::create_directories(target_directory);
+
     const std::filesystem::path source_path{source_directory};
     const std::filesystem::path target_path{target_directory};
 

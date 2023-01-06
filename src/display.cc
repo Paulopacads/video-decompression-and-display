@@ -16,7 +16,7 @@ void create_window()
 
 void display_ppm(PPM_Image ppm, int milliseconds_between) 
 {
-    std::cout << "Start display ppm" << std::endl;
+    //std::cout << "Start display ppm" << std::endl;
     Mat image_tmp(ppm.height, ppm.width, CV_32SC3, ppm.data); 
     Mat image;
     image_tmp.convertTo(image, CV_8UC3);
@@ -54,7 +54,7 @@ void display_all_pgm(std::string source_directory, int fps)
         display_ppm(*converted, milli_wait);
         //delete converted;
 
-        std::cout << entry.filename() << " has been displayed" << std::endl;
+        //std::cout << entry.filename() << " has been displayed" << std::endl;
     }
     waitKey(0);
     destroyWindow(WINDOW_NAME);

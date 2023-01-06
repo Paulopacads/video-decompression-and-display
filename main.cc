@@ -1,43 +1,86 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include "tools/mpeg2dec/include/mpeg2.h"
+// #include "tools/mpeg2dec/include/mpeg2.h"
 #include <iostream>
 #include <unistd.h>
-#include "decode.hh"
-#include "display.hh"
-//#include "mpeg_reader.hh"
-//#include "bob.hh"
+#include "src/decode.hh"
+#include "src/display.hh"
+#include <string>
+#include <filesystem>
+// #include "mpeg_reader.hh"
+// #include "bob.hh"
+
+double get_framerate(double framerate, std::string video_filename)
+{
+    // Get original video frame rate
+    if (framerate < 0)
+    {
+        // TODO modify mpeg2dec to display on stdout the framerate
+        // if ()
+        // framerate = 25;
+    }
+
+    return framerate;
+}
+
+void generate_pgm_files(std::string video_filename)
+{
+    // Remove the content of the pgm folder
+    std::filesystem::remove_all("pgm");
+    std::filesystem::create_directories("pgm");
+
+    std::string command = "cd pgm ; ./../tools/mpeg2dec/src/mpeg2dec ../";
+    command.append(video_filename);
+    command.append(" -o pgm");
+    int err = system(command.c_str());
+    if (err == -1)
+    {
+        std::cerr << "Error: can't execute mpeg2dec command: " << command.c_str() << std::endl;
+        exit(1);
+    }
+}
 
 int main(int argc, char **argv)
 {
-    //convert_all_images("pgm", "ppm");
-    display_all_pgm("pgm", 60);
-
     int opt;
 
     std::string video_filename;
-    double framerate;
+    double framerate = -1;
     bool on_screen = true;
 
     // Parse command-line arguments using getopt
-    while ((opt = getopt(argc, argv, "video:f:ppm")) != -1)
+    while ((opt = getopt(argc, argv, "v:f:p")) != -1)
     {
         switch (opt)
         {
-        case 'video':
+        case 'v':
             video_filename = optarg;
             break;
         case 'f':
             framerate = std::stod(optarg);
             break;
-        case 'ppm':
+        case 'p':
             on_screen = false;
             break;
         default:
-            std::cerr << "Usage: " << argv[0] << " [-video filename] [-f framerate] [-ppm]" << std::endl;
+            std::cerr << "Usage: " << argv[0] << " [-v filename] [-f framerate] [-p]" << std::endl;
             return 1;
         }
     }
+
+    // *** Generate all pgm files *** //
+    generate_pgm_files(video_filename);
+
+    if (on_screen)
+    {
+        // Framerate gestion
+        // framerate = get_framerate(framerate, video_filename);
+        framerate = 25;
+
+        display_all_pgm("pgm", framerate);
+    }
+    else
+        convert_all_images("pgm", "ppm");
 }
 
 /*

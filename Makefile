@@ -1,8 +1,8 @@
 
 CC = g++
 
-CPP_FILES = decode.cc display.cc #mpeg_reader.cc #bob.cc tools/mpeg2dec/libmpeg2/decode.c
-HXX_FILES = tools/mpeg2dec/include/mpeg2.h decode.hh display.hh #mpeg_reader.hh #bob.hh
+CPP_FILES = src/decode.cc src/display.cc #mpeg_reader.cc #bob.cc tools/mpeg2dec/libmpeg2/decode.c
+HXX_FILES = src/decode.hh src/display.hh #mpeg_reader.hh #bob.hh
 OBJ_FILES = $(CPP_FILES:.cpp=.o)
 
 CXX_FLAGS += -Wall -Wextra -O3 -g
@@ -12,12 +12,6 @@ LIBS = $(shell pkg-config --libs opencv4)
 MAIN_FILE = main.cc
 DIST = main
 
-SKEL_DIST_DIR = pogl_skel_tp
-SKEL_FILES = $(CPP_FILES) $(HXX_FILES) $(MAIN_FILE) Makefile
-
-
-#For gcc 4.9
-#CXXFLAGS+=-fdiagnostics-color=auto
 export GCC_COLORS=1
 
 define color
@@ -33,7 +27,6 @@ define default_color
 	if test `tput colors` -gt 0 ; then  tput sgr0 ; fi; \
     fi
 endef
-
 
 all: post-build
 
@@ -78,12 +71,4 @@ build: $(OBJ_FILES)
 clean:
 	rm -f $(OBJ_FILES)
 	rm -f $(DIST)
-	rm -rf $(SKEL_DIST_DIR).tar.bz2
 
-
-skel:
-	rm -rf $(SKEL_DIST_DIR)
-	mkdir $(SKEL_DIST_DIR)
-	cp $(SKEL_FILES) $(SKEL_DIST_DIR)
-	tar -cjvf $(SKEL_DIST_DIR).tar.bz2 $(SKEL_DIST_DIR)
-	rm -rf $(SKEL_DIST_DIR)
