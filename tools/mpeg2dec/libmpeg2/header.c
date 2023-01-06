@@ -241,7 +241,7 @@ static int sequence_ext (mpeg2dec_t * mpeg2dec)
 
     sequence->frame_period =
 	sequence->frame_period * ((buffer[5]&31)+1) / (((buffer[5]>>5)&3)+1);
-	printf("Frame Period: %f", (float)sequence->frame_period / (float)27000000);
+	printf("Frame Period: %f\n", (float)sequence->frame_period / (float)27000000);
 
     mpeg2dec->ext_state = SEQ_DISPLAY_EXT;
 
@@ -646,11 +646,11 @@ static int picture_coding_ext (mpeg2dec_t * mpeg2dec)
     picture->flags = flags;
 	
 	if (flags & PIC_FLAG_PROGRESSIVE_FRAME)
-		printf(" FLAG_PROGRESSIVE_FRAME ");
+		printf("FLAG_PROGRESSIVE_FRAME");
 	if (flags & PIC_FLAG_TOP_FIELD_FIRST)
-		printf(" FLAG_TOP_FIELD_FIRST ");
+		printf("FLAG_TOP_FIELD_FIRST");
 	if (flags & PIC_FLAG_REPEAT_FIRST_FIELD)
-		printf(" FLAG_REPEAT_FIRST_FIELD ");
+		printf("FLAG_REPEAT_FIRST_FIELD");
 	printf("\n");
 	
     mpeg2dec->ext_state = PIC_DISPLAY_EXT | COPYRIGHT_EXT | QUANT_MATRIX_EXT;

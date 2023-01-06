@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <set>
 #include <opencv2/opencv.hpp>
+#include <vector>
 
 #define WINDOW_NAME "render"
 using namespace cv;
@@ -35,24 +36,27 @@ bool name_compare(std::filesystem::path a, std::filesystem::path b)
     return a_str < b_str;
 }
 
-void display_all_pgm(std::string source_directory, int fps) 
+void display_all_pgm(std::string source_directory, bool constant_fps, std::vector<uint> &flags, std::vector<float> &frame_periods) 
 {
     const std::filesystem::path source_path{source_directory};
     create_window();
-    int milli_wait = 1000 / fps;
-    std::cout << "Frame period " << milli_wait << "ms Framerate " << fps << "ips" << std::endl;
 
     // Sort the file list to display in the right order
     std::set<std::filesystem::path, decltype(name_compare)*> sorted_by_name(name_compare);
     for (auto &entry : std::filesystem::directory_iterator(source_path))
         sorted_by_name.insert(entry.path());
 
+    int act_period = frame_periods[0];
+    int index_period = 0;
+    int index_flags = 0;
     for (const auto &entry : sorted_by_name)
     {
+        //std::cout << "Frame period " << milli_wait << "ms Framerate " << fps << "ips" << std::endl;
+        // --- TODO Handle flags change and frmae periods --- //
         PGM_Image *pgm = new PGM_Image(entry);
         PPM_Image *converted = new PPM_Image(pgm);
         delete pgm;
-        display_ppm(*converted, milli_wait);
+        display_ppm(*converted, act_period);
         //delete converted;
 
         //std::cout << entry.filename() << " has been displayed" << std::endl;

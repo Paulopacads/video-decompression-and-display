@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-// #include "tools/mpeg2dec/include/mpeg2.h"
 #include <iostream>
 #include <unistd.h>
 #include "src/decode.hh"
@@ -8,11 +7,12 @@
 #include <string>
 #include <filesystem>
 #include <fstream>
-// #include "mpeg_reader.hh"
-// #include "bob.hh"
+#include <vector>
+#include <flags.hh>
+// #include "src/bob.hh"
 
 // Generate all pgm files an return the framerate of the file
-float generate_pgm_files(std::string video_filename)
+void generate_pgm_files(std::string video_filename, std::vector<uint> &flags, std::vector<float> &frame_periods)
 {
     // Remove the content of the pgm folder
     std::filesystem::remove_all("pgm");
@@ -36,13 +36,28 @@ float generate_pgm_files(std::string video_filename)
         exit(1);
     }
 
+    // Get flags and frame periods
     std::string line;
-    std::getline(info_file, line); 
-    float frame_period= -1;
-    sscanf(line.c_str(), "Frame Period: %f", &frame_period);
-    info_file.close();
+    float new_frame_period;
+    while (std::getline(info_file, line))
+    {
+        if (sscanf(line.c_str(), "Frame Period: %f", &new_frame_period) != 0)
+        {
+            frame_periods.push_back(new_frame_period);
+            flags.push_back(CHANGE_PERIOD);
+        }
+        else
+        {
+            if (line.compare("FLAG_TOP_FIELD_FIRST"))
+                flags.push_back(FLAG_TOP_FIELD_FIRST);
+            else if (line.compare("FLAG_PROGRESSIVE_FRAME"))
+                flags.push_back(FLAG_PROGRESSIVE_FRAME);
+            else if (line.compare("FLAG_REPEAT_FIRST_FIELD"))
+                flags.push_back(FLAG_REPEAT_FIRST_FIELD);
+        }
+    }
 
-    return frame_period;
+    info_file.close();
 }
 
 int main(int argc, char **argv)
@@ -74,19 +89,25 @@ int main(int argc, char **argv)
     }
 
     // *** Generate all pgm files *** //
-    float frame_period = generate_pgm_files(video_filename);
+    std::vector<uint> flags = std::vector<uint>();
+    std::vector<float> frame_periods = std::vector<float>();
+    generate_pgm_files(video_filename, flags, frame_periods);
 
     if (on_screen)
     {
         // Framerate gestion
-        if (framerate < 0) {
-            if (frame_period < 0)
-                framerate = 25;
-            else 
-                framerate = 1.0f / frame_period;
+        if (framerate < 0)
+        {
+            if (frame_periods.size() == 0)
+                frame_periods.push_back(1000.0f / 25.0f);
+        }
+        else
+        {
+            frame_periods.clear(); 
+            frame_periods.push_back(1000.0f / framerate);
         }
 
-        display_all_pgm("pgm", framerate);
+        display_all_pgm("pgm", frame_periods.size() == 1, flags, frame_periods);
     }
     else
         convert_all_images("pgm", "ppm");
