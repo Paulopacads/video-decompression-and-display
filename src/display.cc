@@ -17,7 +17,7 @@ void create_window()
     namedWindow(WINDOW_NAME, WINDOW_NORMAL);
 }
 
-void display_ppm(PPM_Image ppm, int milliseconds_between)
+clock_t display_ppm(PPM_Image ppm, int milliseconds_between, clock_t time_last_frame)
 {
     // cout << "Start display ppm" << endl;
     Mat image_tmp(ppm.height, ppm.width, CV_32SC3, ppm.data);
@@ -26,7 +26,11 @@ void display_ppm(PPM_Image ppm, int milliseconds_between)
     cvtColor(image, image, COLOR_RGB2BGR);
     // cout << image << endl;
     imshow(WINDOW_NAME, image);
-    waitKey(milliseconds_between);
+    int milli_wait = milliseconds_between - int(((float)clock() - (float)time_last_frame) / CLOCKS_PER_SEC * 1000);
+    if (milli_wait > 0)
+        waitKey(milliseconds_between);
+    std::cout << milli_wait << " / " << milliseconds_between << " Time " << (float)clock()/CLOCKS_PER_SEC << " / " << (float)time_last_frame / CLOCKS_PER_SEC << std::endl;
+    return clock();
 }
 
 bool name_compare(filesystem::path a, filesystem::path b)
@@ -51,13 +55,16 @@ void display_all_pgm(string source_directory, vector<uint> &flags, vector<float>
     int act_period = frame_periods[0] * 1000;
     int index_period = 0;
     int index_flags = 0;
+    std::vector<PPM_Image *> to_delete = std::vector<PPM_Image *>();
     // cout << "Start period " << act_period << " size " << frame_periods.size() << endl;
+    clock_t time_last_frame = clock();
     for (const auto &entry : sorted_by_name)
     {
         //cout << "Start flag " << flags[index_flags] << " size " << flags.size() << " i " << index_flags << endl;
-        if (flags[index_flags] == CHANGE_PERIOD && frame_periods.size() > 1)
+        if (flags[index_flags] == CHANGE_PERIOD)
         {
-            act_period = frame_periods[index_period++] * 1000;
+            if (frame_periods.size() > 1)
+                act_period = (frame_periods[index_period++] * 1000);
             //cout << "Frame period " << act_period << "ms Framerate " << 1000 / act_period << "ips" << endl;
             index_flags++;
         }
@@ -67,23 +74,20 @@ void display_all_pgm(string source_directory, vector<uint> &flags, vector<float>
 
         if (flags[index_flags] == FLAG_PROGRESSIVE_FRAME)
         {
-            display_ppm(*ppm, act_period);
+            time_last_frame = display_ppm(*ppm, act_period, time_last_frame);;
         }
         else
         {
             PPM_Image **ppm_bob_p = bob_deinterlace(ppm, flags[index_flags] == FLAG_TOP_FIELD_FIRST);
-            display_ppm(*ppm_bob_p[0], act_period);
+            time_last_frame = display_ppm(*ppm_bob_p[0], act_period, time_last_frame);
             if (flags[index_flags] == FLAG_REPEAT_FIRST_FIELD)
-                display_ppm(*ppm_bob_p[0], act_period);
-            display_ppm(*ppm_bob_p[1], act_period);
+                time_last_frame= display_ppm(*ppm_bob_p[0], act_period, time_last_frame);
+            time_last_frame = display_ppm(*ppm_bob_p[1], act_period, time_last_frame);
 
-            //delete ppm_bob_p[0];
-            //delete ppm_bob_p[1];
             free(ppm_bob_p);
         }
 
-        //delete pgm;
-        //delete ppm;
+        delete pgm;
 
         if (flags.size() > 1) 
             index_flags++;

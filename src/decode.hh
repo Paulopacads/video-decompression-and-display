@@ -18,7 +18,6 @@ public:
     {
         free(data);
     }
-    PPM_Image(std::string filename);
     void save_ppm(std::string filename);
 };
 

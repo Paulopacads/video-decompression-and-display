@@ -29,11 +29,16 @@ PGM_Image::PGM_Image(std::string filename)
 
     // Content
     int index = 0;
-    while (getline(pgm_file, line, '\0'))
+    while (getline(pgm_file, line, (char)0))
     {
         for (unsigned char c : line)
         {
             data[index] = (int)c;
+            index++;
+        }
+        if (index < width * height)
+        {
+            data[index] = 0;
             index++;
         }
     }
@@ -58,24 +63,25 @@ PPM_Image::PPM_Image(int width, int height, int max_val)
 PPM_Image::PPM_Image(PGM_Image *pgm)
 {
     width = pgm->width;
-    height = pgm->height / 3 * 2;
+    height = floor((float)pgm->height / 3.0f * 2.0f);
     max_val = pgm->max_val;
     data = (int *)malloc(sizeof(int) * width * height * 3);
+
 
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
         {
             float y = pgm->data[i * width + j];
-            float u = pgm->data[(height + (int)floor(i / 2)) * width + (int)floor(j / 2)];
-            float v = pgm->data[(height + (int)floor(i / 2)) * width + (int)floor(width / 2) + (int)floor(j / 2)];
+            float u = pgm->data[(height + (int)floor(float(i) / 2.0f)) * width + (int)floor(float(j) / 2.0f)];
+            float v = pgm->data[(height + (int)floor(float(i) / 2.0f)) * width + (int)floor(float(width) / 2.0f) + (int)floor(float(j) / 2.0f)];
 
             y /= 255.0f;
             u = ((u - 128.0f) / 255.0f) * 0.436f;
             v = ((v - 128.0f) / 255.0f) * 0.436f;
 
             int index_pixel = (i * width + j) * 3;
-
+            
             data[index_pixel] = clamp(y + 1.28033f * v, 0.0f, 1.0f) * 255.0f;
             data[index_pixel + 1] = clamp(y - 0.21482f * u - 0.38059f * v, 0.0f, 1.0f) * 255.0f;
             data[index_pixel + 2] = clamp(y + 2.12798f * u, 0.0f, 1.0f) * 255.0f;

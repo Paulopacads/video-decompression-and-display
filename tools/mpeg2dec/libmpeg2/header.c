@@ -241,6 +241,8 @@ static int sequence_ext (mpeg2dec_t * mpeg2dec)
 
     sequence->frame_period =
 	sequence->frame_period * ((buffer[5]&31)+1) / (((buffer[5]>>5)&3)+1);
+	if (sequence->flags & SEQ_FLAG_PROGRESSIVE_SEQUENCE)
+		printf("FLAG_PROGRESSIVE_SEQUENCE\n");
 	printf("Frame Period: %f\n", (float)sequence->frame_period / (float)27000000);
 
     mpeg2dec->ext_state = SEQ_DISPLAY_EXT;
@@ -666,7 +668,9 @@ static int picture_display_ext (mpeg2dec_t * mpeg2dec)
 
     nb_pos = picture->nb_fields;
     if (mpeg2dec->sequence.flags & SEQ_FLAG_PROGRESSIVE_SEQUENCE)
-	nb_pos >>= 1;
+	{
+		nb_pos >>= 1;
+	}
 
     for (i = 0; i < nb_pos; i++) {
 	int x, y;

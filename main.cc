@@ -13,7 +13,7 @@
 #include <getopt.h>
 
 // Generate all pgm files an return the framerate of the file
-void generate_pgm_files(std::string video_filename, std::vector<uint> &flags, std::vector<float> &frame_periods)
+void generate_pgm_files(std::string video_filename, char* added_args, std::vector<uint> &flags, std::vector<float> &frame_periods)
 {
     // Remove the content of the pgm folder
     std::filesystem::remove_all("pgm");
@@ -21,8 +21,13 @@ void generate_pgm_files(std::string video_filename, std::vector<uint> &flags, st
 
     std::string command = "cd pgm ; ./../tools/mpeg2dec/src/mpeg2dec ../";
     command.append(video_filename);
+    command.append(" ");
+    if (added_args != nullptr) {
+        command.append(added_args);
+    }
     command.append(" -o pgm > infos.txt");
     int err = system(command.c_str());
+    std::cout << command.c_str() << std::endl;
     if (err == -1)
     {
         std::cerr << "Error: can't execute mpeg2dec command: " << command.c_str() << std::endl;
@@ -40,7 +45,7 @@ void generate_pgm_files(std::string video_filename, std::vector<uint> &flags, st
     // Get flags and frame periods
     std::string line;
     float new_frame_period;
-    while (std::getline(info_file, line))
+    while (std::getline(info_file, line, '\n'))
     {
         if (sscanf(line.c_str(), "Frame Period: %f", &new_frame_period) != 0)
         {
@@ -49,12 +54,14 @@ void generate_pgm_files(std::string video_filename, std::vector<uint> &flags, st
         }
         else
         {
-            if (line.compare("FLAG_TOP_FIELD_FIRST"))
+            if (line.compare("FLAG_TOP_FIELD_FIRST") == 0)
                 flags.push_back(FLAG_TOP_FIELD_FIRST);
-            else if (line.compare("FLAG_PROGRESSIVE_FRAME"))
+            else if (line.compare("FLAG_PROGRESSIVE_FRAME") == 0)
                 flags.push_back(FLAG_PROGRESSIVE_FRAME);
-            else if (line.compare("FLAG_REPEAT_FIRST_FIELD"))
+            else if (line.compare("FLAG_REPEAT_FIRST_FIELD") == 0)
                 flags.push_back(FLAG_REPEAT_FIRST_FIELD);
+            else 
+                flags.push_back(FLAG_TOP_FIELD_FIRST);
         }
     }
 
@@ -69,13 +76,15 @@ int main(int argc, char **argv)
     float framerate = -1.0f;
     bool on_screen = true;
     uint force_flag = 10;
+    char *added_args = nullptr;
 
     const char *short_options = "v:f:p";
     const option long_options[] = {
         { "video",  1, NULL, 'v' },
         { "framerate", 1, NULL, 'f' },
         { "ppm",  0, NULL, 'p' },
-        { "flags",    1, NULL, 0 } 
+        { "flags",    1, NULL, 0 },
+        { "more", 1, NULL, 1}
     };
 
     // Parse command-line arguments using getopt
@@ -95,6 +104,9 @@ int main(int argc, char **argv)
         case 0:
             force_flag = std::stoi(optarg);
             break;
+        case 1: 
+            added_args = optarg;
+            break;
         default:
             std::cerr << "Usage: " << argv[0] << " [-v filename] [-f framerate] [-p]" << std::endl;
             return 1;
@@ -104,7 +116,7 @@ int main(int argc, char **argv)
     // *** Generate all pgm files *** //
     std::vector<uint> flags = std::vector<uint>();
     std::vector<float> frame_periods = std::vector<float>();
-    generate_pgm_files(video_filename, flags, frame_periods);
+    generate_pgm_files(video_filename, added_args, flags, frame_periods);
 
     if (on_screen)
     {
@@ -112,12 +124,12 @@ int main(int argc, char **argv)
         if (framerate < 0)
         {
             if (frame_periods.size() == 0)
-                frame_periods.push_back(1000.0f / 25.0f);
+                frame_periods.push_back(1.0f / 25.0f);
         }
         else
         {
             frame_periods.clear(); 
-            frame_periods.push_back(1000.0f / framerate);
+            frame_periods.push_back(1.0f / framerate);
         }
 
         if (force_flag != 10)
