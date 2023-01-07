@@ -47,22 +47,24 @@ void generate_pgm_files(std::string video_filename, char* added_args, std::vecto
     float new_frame_period;
     while (std::getline(info_file, line, '\n'))
     {
+        uint flag = 0;
         if (sscanf(line.c_str(), "Frame Period: %f", &new_frame_period) != 0)
         {
             frame_periods.push_back(new_frame_period);
-            flags.push_back(CHANGE_PERIOD);
+            flags.push_back(1 << CHANGE_PERIOD);
         }
         else
         {
-            if (line.compare("FLAG_TOP_FIELD_FIRST") == 0)
-                flags.push_back(FLAG_TOP_FIELD_FIRST);
-            else if (line.compare("FLAG_PROGRESSIVE_FRAME") == 0)
-                flags.push_back(FLAG_PROGRESSIVE_FRAME);
-            else if (line.compare("FLAG_REPEAT_FIRST_FIELD") == 0)
-                flags.push_back(FLAG_REPEAT_FIRST_FIELD);
-            else 
-                flags.push_back(FLAG_TOP_FIELD_FIRST);
+            if (line.find("FLAG_TOP_FIELD_FIRST") != std::string::npos) 
+                flag |= 1 << FLAG_TOP_FIELD_FIRST;
+            if (line.find("FLAG_PROGRESSIVE_FRAME") != std::string::npos)
+                flag |= 1 << FLAG_PROGRESSIVE_FRAME;
+            if (line.find("FLAG_REPEAT_FIRST_FIELD") != std::string::npos)
+                flag |= 1 << FLAG_REPEAT_FIRST_FIELD;
+            flags.push_back(flag);
         }
+
+        
     }
 
     info_file.close();
@@ -135,7 +137,11 @@ int main(int argc, char **argv)
         if (force_flag != 10)
         {
             flags.clear(); 
-            flags.push_back(force_flag);
+            // BFF
+            if (force_flag > 3)
+                flags.push_back(0);
+            else 
+                flags.push_back(1 << force_flag);
         }
 
         display_all_pgm("pgm", flags, frame_periods);

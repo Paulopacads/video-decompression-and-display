@@ -19,17 +19,15 @@ void create_window()
 
 clock_t display_ppm(PPM_Image ppm, int milliseconds_between, clock_t time_last_frame)
 {
-    // cout << "Start display ppm" << endl;
     Mat image_tmp(ppm.height, ppm.width, CV_32SC3, ppm.data);
     Mat image;
     image_tmp.convertTo(image, CV_8UC3);
     cvtColor(image, image, COLOR_RGB2BGR);
-    // cout << image << endl;
+
     imshow(WINDOW_NAME, image);
     int milli_wait = milliseconds_between - int(((float)clock() - (float)time_last_frame) / CLOCKS_PER_SEC * 1000);
     if (milli_wait > 0)
         waitKey(milliseconds_between);
-    std::cout << milli_wait << " / " << milliseconds_between << " Time " << (float)clock()/CLOCKS_PER_SEC << " / " << (float)time_last_frame / CLOCKS_PER_SEC << std::endl;
     return clock();
 }
 
@@ -56,12 +54,12 @@ void display_all_pgm(string source_directory, vector<uint> &flags, vector<float>
     int index_period = 0;
     int index_flags = 0;
     std::vector<PPM_Image *> to_delete = std::vector<PPM_Image *>();
-    // cout << "Start period " << act_period << " size " << frame_periods.size() << endl;
+    //cout << "Start period " << act_period << " size " << frame_periods.size() << endl;
     clock_t time_last_frame = clock();
     for (const auto &entry : sorted_by_name)
     {
         //cout << "Start flag " << flags[index_flags] << " size " << flags.size() << " i " << index_flags << endl;
-        if (flags[index_flags] == CHANGE_PERIOD)
+        if (flags[index_flags] & (1 << CHANGE_PERIOD))
         {
             if (frame_periods.size() > 1)
                 act_period = (frame_periods[index_period++] * 1000);
@@ -72,16 +70,19 @@ void display_all_pgm(string source_directory, vector<uint> &flags, vector<float>
         PGM_Image *pgm = new PGM_Image(entry);
         PPM_Image *ppm = new PPM_Image(pgm);
 
-        if (flags[index_flags] == FLAG_PROGRESSIVE_FRAME)
+        if (flags[index_flags] & (1 << FLAG_PROGRESSIVE_FRAME))
         {
-            time_last_frame = display_ppm(*ppm, act_period, time_last_frame);;
+            time_last_frame = display_ppm(*ppm, act_period, time_last_frame);
         }
         else
         {
-            PPM_Image **ppm_bob_p = bob_deinterlace(ppm, flags[index_flags] == FLAG_TOP_FIELD_FIRST);
+            PPM_Image **ppm_bob_p = bob_deinterlace(ppm, flags[index_flags] & (1 << FLAG_TOP_FIELD_FIRST));
+            PPM_Image *duplicate = nullptr;
+            if (flags[index_flags] & (1 << FLAG_REPEAT_FIRST_FIELD)) 
+                duplicate = ppm_bob_p[0]->duplicate();
             time_last_frame = display_ppm(*ppm_bob_p[0], act_period, time_last_frame);
-            if (flags[index_flags] == FLAG_REPEAT_FIRST_FIELD)
-                time_last_frame= display_ppm(*ppm_bob_p[0], act_period, time_last_frame);
+            if (flags[index_flags] & (1 << FLAG_REPEAT_FIRST_FIELD))
+                time_last_frame= display_ppm(*duplicate, act_period, time_last_frame);
             time_last_frame = display_ppm(*ppm_bob_p[1], act_period, time_last_frame);
 
             free(ppm_bob_p);

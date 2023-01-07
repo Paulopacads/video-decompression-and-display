@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <cstdint>
 #include <algorithm>
+#include <cstring>
 
 
 using namespace std;
@@ -138,4 +139,15 @@ void convert_all_images(std::string source_directory, std::string target_directo
 
         std::cout << entry.path() << " has been converted to " << target_path << std::endl;
     }
+}
+
+PPM_Image *PPM_Image::duplicate()
+{
+    PPM_Image *res = new PPM_Image();
+    res->width = width;
+    res->height = height; 
+    res->max_val = max_val; 
+    res->data = (int *)malloc(sizeof(int) * width * height * 3); 
+    memcpy(res->data, data, sizeof(int) * width * height * 3);
+    return res;
 }

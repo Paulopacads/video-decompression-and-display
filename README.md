@@ -3,6 +3,8 @@
 Made by : 
 Antoine Aubin - Melvin Gidel - Paul Galand
 
+Repport link with answers to the subject's questions : https://hackmd.io/@-XlXKLqpSbSw3UY6fG6Ifg/r1FnN4IPi
+
 ## To use the program 
 ```sh
 ./mpeg2dec.sh #Will compile mpeg2dec lib
