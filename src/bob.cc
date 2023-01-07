@@ -17,7 +17,8 @@ PPM_Image **bob_deinterlace(PPM_Image *in, bool top_first) {
 
 void bob_deinterlace(int *in, int *out, int width, int height, bool isTop) {
     int i, j;
-    int offset = isTop ? 0 : 1;
+    int line = isTop ? 0 : 1;
+    int offset = line * 2 - 1;
     int pixel_width = 3;
 
     if (in == NULL || out == NULL) {
@@ -27,17 +28,10 @@ void bob_deinterlace(int *in, int *out, int width, int height, bool isTop) {
 
     for (i = 0; i < height; i++) {
         for (j = 0; j < width * pixel_width; j++) {
-            if (i % 2 == offset)
+            if (i % 2 == line)
                 out[i * width * pixel_width + j] = in[i * width * pixel_width + j];
             else {
-                if (i > 0) {
-                    if (i < height - 1)
-                        out[i * width * pixel_width + j] = (in[(i - 1) * width * pixel_width + j] + in[(i + 1) * width * pixel_width + j]) / 2;
-                    else
-                        out[i * width * pixel_width + j] = in[(i - 1) * width * pixel_width + j];
-                }
-                else
-                    out[i * width * pixel_width + j] = in[(i + 1) * width * pixel_width + j];
+                out[i * width * pixel_width + j] = in[(i + offset) * width * pixel_width + j];
             }
         }
     }
